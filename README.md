@@ -9,7 +9,7 @@
 El objetivo principal es modelar la compleja estructura de la NBA. Permite registrar desde la información básica de las franquicias hasta el rendimiento detallado de los jugadores en cada partido, facilitando consultas avanzadas de estadísticas.
 
 ## 📊 Arquitectura y Modelo
-*   **Motor de Base de Datos utilizado:** (Ej. MySQL, PostgreSQL, SQL Server)
+*   **Motor de Base de Datos utilizado:** (MySQL)
 *   **Componentes principales:**
     *   `Equipos`: Registro de conferencias, divisiones y estadios.
     *   `Jugadores`: Datos personales, posiciones y contratos.
