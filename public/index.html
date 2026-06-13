@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Prediction Engine</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+    <header>
+        <h1>NBA <span>Prediction Engine</span></h1>
+        <p>Predicciones automatizadas y análisis estadístico histórico</p>
+    </header>
+
+    <main class="container">
+        
+        <section class="stats-section">
+            <div class="stats-box-header">
+                <h2>📊 Consulta de Estadísticas Históricas</h2>
+                <p>Selecciona una pregunta para extraer datos en tiempo real de la base de datos</p>
+            </div>
+            
+            <div class="controls-row">
+                <select id="stat-query-select" class="custom-select">
+                    <option value="" disabled selected>¿Qué deseas preguntar a la base de datos?</option>
+                    <option value="top_scorers">¿Quiénes son los mejores anotadores (Top 10 Promedio)?</option>
+                    <option value="top_assists">¿Quiénes lideran en asistencias (Top 10 Promedio)?</option>
+                    <option value="triple_doubles">¿Qué jugadores tienen más Triples-Dobles históricos?</option>
+                    <option value="team_records">¿Cuáles son los equipos con más victorias totales?</option>
+                    <option value="best_defense">¿Cuáles son las mejores defensas (Menos puntos permitidos)?</option>
+                </select>
+                <button onclick="askDatabase()" class="btn-query">Consultar 🔍</button>
+            </div>
+
+            <div id="answers-container" class="answers-card" style="display: none;">
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Posición</th>
+                            <th id="table-th-name">Líder</th>
+                            <th id="table-th-value">Métrica</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stats-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+
+        <hr class="section-divider">
+
+        <h2 class="section-title">🔮 Próximos Partidos y Predicciones</h2>
+        <div class="predictions-grid" id="predictions-container">
+            </div>
+    </main>
+
+    <script>
+        // --- FUNCIÓN PARA CONSULTAR LA BASE DE DATOS (PREGUNTAS) ---
+        async function askDatabase() {
+            const select = document.getElementById('stat-query-select');
+            const queryType = select.value;
+            if(!queryType) return alert("Por favor, selecciona una pregunta primero.");
+
+            const tableContainer = document.getElementById('answers-container');
+            const tableBody = document.getElementById('stats-table-body');
+            const thName = document.getElementById('table-th-name');
+            const thValue = document.getElementById('table-th-value');
+
+            try {
+                const response = await fetch(`/api/stats?type=${queryType}`);
+                const resData = await response.json();
+
+                if (resData.success && resData.data.length > 0) {
+                    // Cambiar dinámicamente los encabezados según la consulta
+                    if(queryType.includes('team') || queryType.includes('defense')) {
+                        thName.innerText = "Equipo";
+                    } else {
+                        thName.innerText = "Jugador";
+                    }
+                    
+                    // Definir si es promedio o total
+                    thValue.innerText = queryType.includes('defense') || queryType.includes('scorers') || queryType.includes('assists') ? "Promedio" : "Total";
+
+                    // Construir las filas de la tabla
+                    tableBody.innerHTML = resData.data.map((row, index) => `
+                        <tr>
+                            <td><strong>#${index + 1}</strong></td>
+                            <td>${row.name}</td>
+                            <td class="highlight-cell">${row.value}</td>
+                        </tr>
+                    `).join('');
+                    
+                    // Mostrar la tabla al usuario
+                    tableContainer.style.display = 'block';
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="3" style="text-align:center;">No se encontraron registros.</td></tr>`;
+                    tableContainer.style.display = 'block';
+                }
+            } catch (error) {
+                console.error("Error al consultar estadísticas:", error);
+                alert("Error de conexión con el servidor de base de datos.");
+            }
+        }
+
+        // --- FUNCIÓN PARA CARGAR LAS PREDICCIONES AUTOMÁTICAS ---
+        async function loadPredictions() {
+            const container = document.getElementById('predictions-container');
+            try {
+                const response = await fetch('/api/predictions/upcoming');
+                const data = await response.json();
+
+                if (!data.predictions || data.predictions.length === 0) {
+                    container.innerHTML = `<p style="text-align:center; width:100%; color:var(--text-secondary);">${data.message || 'No hay partidos disponibles.'}</p>`;
+                    return;
+                }
+
+                // Construcción de tus tarjetas dinámicas originales
+                container.innerHTML = data.predictions.map(game => {
+                    const homeWinner = game.prediction.expected_winner === game.teams.home;
+                    const awayWinner = game.prediction.expected_winner === game.teams.away;
+                    
+                    const gameDate = new Date(game.date).toLocaleDateString('es-MX', {
+                        weekday: 'short', month: 'short', day: 'numeric'
+                    });
+
+                    return `
+                        <div class="match-card">
+                            <div class="match-header">
+                                <span>📅 ${gameDate}</span>
+                                <span class="match-status">${game.status}</span>
+                            </div>
+                            <div class="match-body">
+                                <div class="team-section ${homeWinner ? 'is-winner' : ''}">
+                                    <div class="team-name">${game.teams.home}</div>
+                                    <div class="team-score">${game.prediction.predicted_home_score}</div>
+                                </div>
+                                <div class="vs-separator">VS</div>
+                                <div class="team-section ${awayWinner ? 'is-winner' : ''}">
+                                    <div class="team-name">${game.teams.away}</div>
+                                    <div class="team-score">${game.prediction.predicted_away_score}</div>
+                                </div>
+                            </div>
+                            <div class="match-footer">
+                                <div class="prediction-insight">
+                                    Favorito: <strong>${game.prediction.expected_winner}</strong>
+                                </div>
+                                <div class="spread-tag">Ventaja: +${game.prediction.points_difference} pts</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error("Error cargando el frontend:", error);
+                container.innerHTML = `<p style="text-align:center; width:100%; color:#ef4444;">Error de conexión con el servidor de la API.</p>`;
+            }
+        }
+
+        // Ejecución automática inicial al abrir la app
+        loadPredictions();
+    </script>
+</body>
+</html>
