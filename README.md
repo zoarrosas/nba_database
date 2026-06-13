@@ -24,4 +24,4 @@ El objetivo principal es modelar la compleja estructura de la NBA. Permite regis
 4. ¡Listo! Ya puedes empezar a realizar consultas.
 
 ---
-Desarrollado por [Tu Nombre o Usuario de GitHub] - 2026
+Desarrollado por [Laura Zoar Rosas Favila] - 2026
