@@ -19,7 +19,7 @@ El objetivo principal es modelar la compleja estructura de la NBA. Permite regis
 
 ## 🛠️ Cómo ejecutar el proyecto
 1. Descarga o clona este repositorio.
-2. Abre tu gestor de bases de datos (ej. Workbench, pgAdmin).
+2. Abre tu gestor de bases de datos (Workbench).
 3. Importa y ejecuta el archivo `database_setup.sql` (o el nombre de tu script) para crear las tablas.
 4. ¡Listo! Ya puedes empezar a realizar consultas.
 
